@@ -19,8 +19,8 @@ Orphange creates such a text file with ajustable amounts of keywords, categories
 
 # How to use
 Be sure to have python installed, I used v3.7.2
-* Edit the config.ini file and set the values you want to try, but start with small values. With high values AC can easily go to guru mode. 
-* Run orphanage.py with a full qualified path of the text file you want to create.
+* Edit the **config.ini** file and set the values you want to try, but start with small values. With high values AC can easily go to guru mode. 
+* Run **orphanage.py** with a full qualified path of the text file you want to create as commandline option.
 * Start ACDSee, switch to a new empty db and catalouge a few existing image files, or just drag'drop an image onto your ACDSee icon o the desktop.
 * Import the text file with Menu-Tools-Database-Import dialogue
 * Play with AC using the existing items you've catalogued and see how it goes. Things to test my be startup time of AC, switching from one mode to another, searching for a keyword or category, assigning an item to a keyword category or collection . . . simply all database related functions. 
@@ -30,7 +30,7 @@ Terminate ACDsee and delete the test database.
 
 # Why python
 * Policies don't allow to run user writebale ps, vbs, cmd or bat scripts on my systems.
-* This script is addressed to experienced user, nothing to just double click and have fun.
+* This script is addressed to experienced users, nothing to just double click and have fun.
 * I like python :-)
 
 # Disclamer
