@@ -26,7 +26,7 @@ Policies don't allow user to run ps, vbs, cmd or bat scripts with write access o
 I like python :-)
 
 # Disclamer
-There's not garanty for anything, you use it on your own risk!
+There's not guaranty for anything, you use it on your own risk!
 You may do with it whatever you like. 
 
 
