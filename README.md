@@ -1,3 +1,6 @@
+
+![Screenshot](Screenshot.jpg)
+
 # Introduction
 Photographers shooting thousands of photos a year need a suitable DAM to manage their image library and ACDSee is a pretty well known app that provides such a DAM for Windows.
 
