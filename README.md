@@ -17,6 +17,9 @@ ACDSee allows to import/export portions of the db in to text files. These text f
 
 Orphange creates such a text file with adjustable amounts of keywords, categories and items. Items also may be assigned to adjustable numers of keywords, categories and collections. Of course none of the items added to the database does realy exist; all items are orphanaed. Therefore the name of this script. 
 
+# Abilities and incapability
+Orphange just ads orphans to an existing db with assigned keywords, categrois or collections. It does not add any EXIF, IPTC or XMP meta data nor any thumbnails. Hence, it of course doesn't tell the whole story, but for some it may give hints how AC will conduct on large databases. 
+
 # How to use
 Be sure to have python installed, I used v3.7.2
 * Edit the **config.ini** file and set the values you want to try, but start with small values. With high values AC can easily go to guru mode. 
