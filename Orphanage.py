@@ -1,10 +1,10 @@
 #!/usr/bin/python
 #
 # Orphanage
-# A tool to foul an ACDsee DB with Orphans and useless meta data
+# A tool to fill an ACDsee databse with orphans and some meta data
 # This is addressed to users, who plan to use ACDSee
-# with lots of image files, lots of keywords or
-# many categories and who need a stress test.
+# with lots of image files, keywords, categories or collections,
+# and who to do some stress tests.
 #
 # Emil 2019-10-09
 #
@@ -12,7 +12,11 @@
 # I used v 3.7.2
 #
 # v. 0.0.1
-#
+#   initial release
+# v. 0.0.2
+#   reduced some similar functions
+#   comments added
+#   clearer naming for functions an vars
 
 import configparser
 import os
@@ -20,177 +24,112 @@ import sys
 import io
 
 
+# create and open a new textfile for writing
+# there's currently no error handling
 def createfile(path):
     return io.open(path, "w", newline="\n", encoding="utf-16")
 
 
+# write the header of the text file with database version number
 def header(outfile, cfg):
     version = cfg['version']
     outfile.write(f'<ACDDB Version="{version}">\n')
 
 
+# finally append the footer
 def footer(outfile):
     outfile.write(f'</ACDDB>')
 
 
-# this one creates a master list with nested keywords
-def keywordlist(outfile, cfg):
+# this one creates nested masterlist of keywords or categories
+# the masterlist of collection is not supported
+def masterlist(outfile, prefix, cfg):
 
-    def keyword(d, c):
-        outfile.write(f'<Keyword>\n')
-        outfile.write(f'<Name>keyword_{d:02d}_{c:06d}</Name>\n')
-        outfile.write(f'<Attributes>0</Attributes>\n')
-
-    count = int(cfg['count'])
-    depth = int(cfg['depth'])
-    if count > 0:
-        outfile.write(f'<KeywordList>\n')
-        numc = 0
-        print()
-        while numc < count:
-            print(f'\rwriting keywordlist: {numc+1:06d}', end='')
-            sys.stdout.flush()
-            numd = 0
-            while numd < depth-1:
-                keyword(numd, numc)
-                outfile.write(f'<KeywordList>\n')
-                numd += 1
-            keyword(numd, numc)
-            numd = 0
-            while numd < depth-1:
-                outfile.write(f'</Keyword>\n')
-                outfile.write(f'</KeywordList>\n')
-                numd += 1
-            outfile.write(f'</Keyword>\n')
-            numc += 1
-        outfile.write(f'</KeywordList>\n')
-
-
-# this one creates nested categories
-def categorylist(outfile, cfg):
-
-    def category(d, c):
-        # outfile.write(f'{d} - {c}')
-        outfile.write(f'<Category>\n')
-        outfile.write(f'<Name>category_{d:02d}_{c:06d}</Name>\n')
-        outfile.write(f'<Attributes>0</Attributes>\n')
-        outfile.write(f'<IconID>0</IconID>\n')
+    def item(outfile, prefix, d, c):
+        outfile.write(f'<{prefix}>\n')
+        outfile.write(f'<Name>{prefix}_{d:03d}_{c:06d}</Name>\n')
+        outfile.write(f'<Attributes>0</Attributes>\n')  # I've never seen a different value here
 
     count = int(cfg['count'])
     depth = int(cfg['depth'])
     if count > 0:
-        outfile.write(f'<CategoryList>\n')
+        outfile.write(f'<{prefix}List>\n')
         print()
         numc = 0
         while numc < count:
-            print(f'\rwriting categorylist: {numc+1:06d}', end='')
+            print(f'\rwriting {prefix} masterlist: {numc+1:06d}', end='')
             sys.stdout.flush()
             numd = 0
             while numd < depth-1:
-                category(numd, numc)
-                outfile.write(f'<CategoryList>\n')
+                item(outfile, prefix, numd, numc)
+                outfile.write(f'<{prefix}List>\n')
                 numd += 1
-            category(numd, numc)
+            item(outfile, prefix, numd, numc)
             numd = 0
             while numd < depth-1:
-                outfile.write(f'</Category>\n')
-                outfile.write(f'</CategoryList>\n')
+                outfile.write(f'</{prefix}>\n')
+                outfile.write(f'</{prefix}List>\n')
                 numd += 1
-            outfile.write(f'</Category>\n')
+            outfile.write(f'</{prefix}>\n')
             numc += 1
-        outfile.write(f'</CategoryList>\n')
+        outfile.write(f'</{prefix}List>\n')
 
 
-# this one creates nested categories
+# creates the assetlist with the folderrootlist
 def assetlist(outfile, cfg):
 
-    def kslist(cfg):
-        keys = int(cfg['assignedkeywords'])
-        depth = int(cfg['keyworddepth'])
-        if keys > 0:
-            outfile.write(f'<AssetKeywordList>\n')
+    # add a nested keyword/categorie/collection to the catalogued item
+    def list(outfile, prefix, num, depth):
+        if num > 0:
+            outfile.write(f'<Asset{prefix}List>\n')
             numc = 0
-            while numc < keys:
-                kwd = f'<AssetKeyword>'
+            while numc < num:
+                kwd = f'<Asset{prefix}>'
                 numd = 0
                 while numd < depth-1:
-                    kwd = kwd + f'Keyword_{numd:03d}_{numc:03d}\\'
+                    kwd = kwd + f'{prefix}_{numd:03d}_{numc:06d}\\'
                     numd += 1
-                kwd = kwd + f'Keyword_{numd:03d}_{numc:03d}'
+                kwd = kwd + f'{prefix}_{numd:03d}_{numc:06d}'
                 numc += 1
-                kwd = kwd + f'</AssetKeyword>\n'
+                kwd = kwd + f'</Asset{prefix}>\n'
                 outfile.write(kwd)
-            outfile.write(f'</AssetKeywordList>\n')
+            outfile.write(f'</Asset{prefix}List>\n')
 
-    def cylist(cfg):
-        cats = int(cfg['assignedcategories'])
-        depth = int(cfg['categorydepth'])
-        if cats > 0:
-            outfile.write(f'<AssetCategoryList>\n')
-            numc = 0
-            while numc < cats:
-                kwd = f'<AssetCategory>'
-                numd = 0
-                while numd < depth-1:
-                    kwd = kwd + f'Category_{numd:03d}_{numc:03d}\\'
-                    numd += 1
-                kwd = kwd + f'Category_{numd:03d}_{numc:03d}'
-                numc += 1
-                kwd = kwd + f'</AssetCategory>\n'
-                outfile.write(kwd)
-            outfile.write(f'</AssetCategoryList>\n')
-
-    def colist(cfg):
-        cols = int(cfg['assignedcollections'])
-        depth = int(cfg['collectiondepth'])
-        if cols > 0:
-            outfile.write(f'<AssetCollectionList>\n')
-            numc = 0
-            while numc < cols:
-                kwd = f'<AssetCollection>'
-                numd = 0
-                while numd < depth-1:
-                    kwd = kwd + f'Collection_{numd:03d}_{numc:03d}\\'
-                    numd += 1
-                kwd = kwd + f'Collection_{numd:03d}_{numc:03d}'
-                numc += 1
-                kwd = kwd + f'</AssetCollection>\n'
-                outfile.write(kwd)
-            outfile.write(f'</AssetCollectionList>\n')
-
-    def asset(c, cfg):
-        # outfile.write(f'{d} - {c}')
+    # create a single catalogued item
+    def item(outfile, c, cfg):
         outfile.write(f'<Asset>\n')
         outfile.write(f'<Name>item_{c:06d}</Name>\n')
-        outfile.write(f'<Folder>&lt;Local\\12345678&gt;\\</Folder>\n')
+        outfile.write(f'<Folder>&lt;Local\\12345678&gt;\\</Folder>\n')  # same volume label as in folderrootlist
         outfile.write(f'<FileType>Nikon RAW</FileType>\n')
-        outfile.write(f'<ImageType>4605262</ImageType>\n')
+        outfile.write(f'<ImageType>4605262</ImageType>\n')  # taken from a NEF raw file
         outfile.write(f'<DBDate>20190101 00:00:00.000</DBDate>\n')
         outfile.write(f'<Caption>Orphan_{c:06d}</Caption>\n')
         outfile.write(f'<Label>red</Label>\n')
         outfile.write(f'<Author>Orphanage</Author>\n')
         outfile.write(f'<Notes>Note_{c:06d}</Notes>\n')
         outfile.write(f'<Rating>1</Rating>\n')
-        kslist(cfg)
-        cylist(cfg)
-        colist(cfg)
+        list(outfile, 'Keyword', int(cfg['keywords']), int(cfg['keyworddepth']))
+        list(outfile, 'Category', int(cfg['categories']), int(cfg['categorydepth']))
+        list(outfile, 'Collection', int(cfg['collections']), int(cfg['collectiondepth']))
         outfile.write(f'</Asset>\n')
 
-    def aslist(cfg):
+    # create the list of catalogued items
+    def itemlist(outfile, cfg):
         outfile.write(f'<AssetList>\n')
         print()
         numc = 0
         while numc < count:
             print(f'\rwriting assets: {numc+1:06d}', end='')
             sys.stdout.flush()
-            asset(numc, cfg)
+            item(outfile, numc, cfg)
             numc += 1
         outfile.write(f'</AssetList>\n')
 
-    def frlist():
+    # create the folderrootlist
+    def folderrootlist(outfile):
         outfile.write(f'<FolderRootList>\n')
         outfile.write(f'<FolderRoot>\n')
-        outfile.write(f'<Name>O:</Name>\n')
+        outfile.write(f'<Name>O:</Name>\n')  # Drive letter O: for all Orphans
         outfile.write(f'<DiscID>12345678</DiscID>\n')
         outfile.write(f'<RootType>Local</RootType>\n')
         outfile.write(f'<SysPath>O:</SysPath>\n')
@@ -200,10 +139,10 @@ def assetlist(outfile, cfg):
         outfile.write(f'</FolderRoot>\n')
         outfile.write(f'</FolderRootList>\n')
 
-    count = int(cfg['count'])
+    count = int(cfg['count'])  # number of assets (catalogued items)
     if count > 0:
-        aslist(cfg)
-        frlist()
+        itemlist(outfile, cfg)
+        folderrootlist(outfile)
 
 
 def doit():
@@ -212,17 +151,12 @@ def doit():
     outfilename = sys.argv[1]
     outfile = createfile(outfilename)
     header(outfile, config['main'])
-    keywordlist(outfile, config['keywordlist'])
-    categorylist(outfile, config['categorylist'])
+    masterlist(outfile, 'Keyword', config['keywordlist'])
+    masterlist(outfile, 'Category', config['categorylist'])
     assetlist(outfile, config['assetlist'])
     footer(outfile)
-
     outfile.close()
 
 
 if __name__ == "__main__":
     doit()
-
-
-
-
